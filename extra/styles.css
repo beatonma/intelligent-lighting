@@ -1,0 +1,33 @@
+html {
+    font-family: monospace;
+    background-color:#444;
+    color: #ddd;
+}
+
+table {
+    width: 100%;
+    max-width: 800px;
+    min-width: 600px;
+}
+
+table, th, td {
+    border: 0px solid black;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px;
+}
+
+.today {
+    border-left: 1px dashed grey;
+    border-right: 1px dashed grey;
+}
+
+.now {
+    padding: 32px !important;
+    border-top: 1px dashed grey;
+    border-bottom: 1px dashed grey;
+}
