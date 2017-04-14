@@ -11,7 +11,7 @@ class LedController:
         self.pin_red = pin_red
         self.pin_green = pin_green
         self.pin_blue = pin_blue
-        self.pins = (pin_red, pin_green, pin_blue)
+        # self.pins = (pin_red, pin_green, pin_blue)
         
         self._init_gpio()
         
@@ -28,7 +28,7 @@ class LedController:
         else:
             log("LedController setup successful")
             
-            for pin in self.pins:
+            for pin in [self.pin_red, self.pin_green, self.pin_blue]:
                 WP.pinMode(pin, 1)
                 WP.softPwmCreate(pin, 0, 100)
     
