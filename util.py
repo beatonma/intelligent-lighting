@@ -9,13 +9,13 @@ import color
 DATEFORMAT = "%y/%m/%d %H:%M:%S"
 LOG_FILE = "log.txt"
 
-def json_safe_load(json, key, default_value=""):
-    try:
-        return json[key]
-    except Exception as e:
-        print("Error loading preference with key='{}': ".format(key, e))
+# def json_safe_load(json, key, default_value=""):
+#     try:
+#         return json[key]
+#     except Exception as e:
+#         print("Error loading preference with key='{}': ".format(key, e))
 
-    return default_value
+#     return default_value
 
 def safe_load(dictionary, key, default_value=""):
     try:
@@ -55,7 +55,7 @@ def read_line(file, line_number=0):
     line = ""
     with open(file, 'r') as f:
         try:
-            line = f.readlines()[line_number]
+            line = f.readlines()[line_number].strip()
         except:
             pass
         
