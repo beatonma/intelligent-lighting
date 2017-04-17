@@ -24,6 +24,8 @@ FILE_CANONICAL = os.path.join(STATUS_ROOT, 'canonical')
 
 
 def init_files():
+    if not os.path.exists(STATUS_ROOT):
+        os.makedirs(STATUS_ROOT)
     for f in [
         FILE_AMBIENT, FILE_NOTIFICATIONS, FILE_PREFERENCES,
         FILE_AI, FILE_CANONICAL
