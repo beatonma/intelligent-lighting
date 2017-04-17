@@ -1,6 +1,5 @@
 import datetime
 import os
-import time
 
 DATEFORMAT = "%y/%m/%d %H:%M:%S"
 LOG_FILE = "log.txt"
@@ -34,16 +33,8 @@ def get_timestamp():
     return '[' + str(datetime.datetime.now().strftime(DATEFORMAT)) + '] '
 
 
-def get_current_time():
-    return time.time()
-
-
 def get_script_name():
     return '[' + os.path.basename(__file__) + '] '
-
-
-def count_lines(file):
-    return sum(1 for line in open(file))
 
 
 def read_line(file, line_number=0):
@@ -65,8 +56,3 @@ def read_lines(file):
         except:
             pass
     return lines
-
-
-def append(file, text):
-    with open(file, 'a+') as f:
-        f.write(text)
