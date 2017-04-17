@@ -114,8 +114,12 @@ function handleRequest(params, callback) {
         clearNotifications();
     }
     else if ('rgb' in params || 'brightness' in params) {
-        // console.log('rgb');
-        setRgbColor(ai, safeRead(params, 'rgb'), safeRead(params, 'brightness', -1));
+        try {
+            setRgbColor(ai, safeRead(params, 'rgb'), safeRead(params, 'brightness', -1));
+        }
+        catch(e) {
+            console.error('Error setting color: ' + e);
+        }
     }
     else if (safeRead(params, 'set_preferences')) {
         setPreferences(params['set_preferences']);
@@ -158,9 +162,6 @@ function serveStatic(url, response) {
                     }
                     response.statusCode = 200;
                     response.end(data);
-                    // else {
-                    //     serveGui(response);
-                    // }
                 });
             }
             else {
@@ -169,9 +170,6 @@ function serveStatic(url, response) {
             }
         }
     });
-
-    // console.log('serveStatic(' + url + ') defaults to gui');
-    // serveGui(response);
 }
 
 function serveGui(response) {
@@ -277,9 +275,10 @@ function setRgbColor(ai, color, brightness) {
         color = fs.readFileSync(FILE_AMBIENT);
         if (color == null) {
             console.error('Could not read color from file');
-            return;
         }
-        rgb = color.split('\n')[0].trim();
+        else {
+            rgb = String(color).split('\n')[0].trim();
+        }
     }
     else {
         const colors = {
