@@ -31,7 +31,9 @@ def init_files():
         FILE_AI, FILE_CANONICAL
     ]:
         if not os.path.exists(f):
-            open(f, 'w').close()
+            with open(f, 'w') as file:
+                if f in [FILE_AMBIENT, FILE_CANONICAL]:
+                    file.write('255 255 255')
 
 
 class Lights:
@@ -86,6 +88,7 @@ class NotificationHandler:
         if notifications:
             self.index = (self.index + 1) % len(notifications)
             n = notifications[self.index]
+            # TODO
 
 
 class Preferences:
