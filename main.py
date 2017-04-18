@@ -33,7 +33,7 @@ def init_files():
         if not os.path.exists(f):
             with open(f, 'w') as file:
                 if f in [FILE_AMBIENT, FILE_CANONICAL]:
-                    file.write('255 255 255')
+                    file.write('255 255 255\n')
 
 
 class Lights:
