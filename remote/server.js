@@ -76,14 +76,15 @@ const server = http.createServer(function(request, response) {
             params = querystring.parse(data);
         }
         if (params) {
-            handleRequest(params, function(statusCode, message) {
+            handleRequest(params, response, function(statusCode, message) {
                 response.statusCode = statusCode;
                 response.end(message);
             });
         }
         else {
-            response.statusCode = 200;
-            response.end(GUI_HTML);
+            // response.statusCode = 200;
+            // response.end(GUI_HTML);
+            serveGui(response);
         }
 
         response.on('error', function(err) {
@@ -97,7 +98,7 @@ const server = http.createServer(function(request, response) {
  * @param  {Function} Callback with parameters for http status code and 
  *                    text to be returned to the client
  */
-function handleRequest(params, callback) {
+function handleRequest(params, response, callback) {
     // If 'ai' parameter is set, the source of this command was an AI/ML agent.
     const ai = 'ai' in params;
 
@@ -113,9 +114,11 @@ function handleRequest(params, callback) {
         console.log('clear_notifications');
         clearNotifications();
     }
-    else if ('rgb' in params || 'brightness' in params) {
+    else if ('rgb' in params || 'brightness' in params ||
+            'r' in params || 'g' in params || 'b' in params) {
         try {
-            setRgbColor(ai, safeRead(params, 'rgb'), safeRead(params, 'brightness', -1));
+            const partialRgb = format('{} {} {}', safeRead(params, 'r', 0), safeRead(params, 'g', 0), safeRead(params, 'b', 0));
+            setRgbColor(ai, safeRead(params, 'rgb', partialRgb), parseInt(safeRead(params, 'brightness', -1)));
         }
         catch(e) {
             console.error('Error setting color: ' + e);
@@ -126,14 +129,19 @@ function handleRequest(params, callback) {
     }
     else {
         console.error('unrecognised params: ' + JSON.stringify(params));
-        // If no parameters given, return a GUI for manual control
-        callback(200, GUI_HTML);
+        // If no parameters given, return a GUI for manual control;
+        serveGui(response);
+        return;
     }
     callback(200, 'ok');
 }
 
 function serveStatic(url, response) {
     url = url.replace(/^\//, '');
+    if (!url) {
+        serveGui(response);
+        return;
+    }
     if (staticFilesWhitelist.indexOf(url) >= 0) {
         console.log('path ' + url + ' allowed');
         if (url in staticFilesRedirects) {
@@ -270,6 +278,7 @@ function setPreferences(preferences) {
 }
 
 function setRgbColor(ai, color, brightness) {
+    console.log('color:"' + color + '" + brightness:"' + brightness + '"');
     var rgb = '';
     if (color == null) {
         color = fs.readFileSync(FILE_AMBIENT);
@@ -303,7 +312,7 @@ function setRgbColor(ai, color, brightness) {
         console.error('Error getting RGB values');
         return;
     }
-    if (arguments.length == 2 || brightness < 0) {
+    if (brightness < 0) {
         writeAmbient(ai, rgb, genErr);
         console.log('Setting color to "' + rgb + '"');
     }
@@ -316,6 +325,8 @@ function setRgbColor(ai, color, brightness) {
         
         hsv['v'] = brightness;
         rgb = colorsys.hsvToRgb(hsv);
+        // console.log(format('rgb: {}', JSON.stringify(outRgb)));
+        // TODO this is returning 0 0 0 for everything?
 
         writeAmbient(ai, format('{} {} {}', rgb['r'], rgb['g'], rgb['b']), genErr);
         console.log('Setting color to "' + JSON.stringify(rgb) + '"');
