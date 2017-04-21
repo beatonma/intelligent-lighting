@@ -19,6 +19,7 @@ const STATUS_DIRECTORY = 'status'
 const FILE_AMBIENT = path.join(STATUS_DIRECTORY, 'ambient');
 const FILE_NOTIFICATIONS = path.join(STATUS_DIRECTORY, 'notifications');
 const FILE_PREFERENCES = path.join(STATUS_DIRECTORY, 'prefs');
+const FILE_CANONICAL = path.join(STATUS_DIRECTORY, 'canonical');
 const FILE_AI = path.join(STATUS_DIRECTORY, 'ambient_ai');
 const FILE_MECH = path.join(STATUS_DIRECTORY, 'mech');
 
@@ -40,7 +41,8 @@ const staticFilesWhitelist = [
     'prefs'
 ];
 const staticFilesRedirects = {
-    'prefs': FILE_PREFERENCES
+    'prefs': FILE_PREFERENCES,
+    'canonical': FILE_CANONICAL
 };
 
 if (!fs.existsSync(STATUS_DIRECTORY)) {
@@ -82,8 +84,6 @@ const server = http.createServer(function(request, response) {
             });
         }
         else {
-            // response.statusCode = 200;
-            // response.end(GUI_HTML);
             serveGui(response);
         }
 
@@ -103,15 +103,12 @@ function handleRequest(params, response, callback) {
     const ai = 'ai' in params;
 
     if (safeRead(params, 'add_notification')) {
-        console.log('add_notification');
         addNotification(params['add_notification'], params['rgb']);
     }
     else if (safeRead(params, 'remove_notification')) {
-        console.log('remove_notification');
         removeNotification(params['remove_notification']);
     }
     else if ('clear_notifications' in params) {
-        console.log('clear_notifications');
         clearNotifications();
     }
     else if ('rgb' in params || 'brightness' in params ||
@@ -142,15 +139,16 @@ function serveStatic(url, response) {
         serveGui(response);
         return;
     }
+    if (url == 'test_connection') {
+        response.statusCode = 200;
+        response.end('ok');
+        return;
+    }
     if (staticFilesWhitelist.indexOf(url) >= 0) {
-        console.log('path ' + url + ' allowed');
         if (url in staticFilesRedirects) {
             console.log(format('redirected {} to {}', url, staticFilesRedirects[url]));
             url = staticFilesRedirects[url];
         }
-    }
-    else {
-        console.log('path ' + url + ' NOT allowed');
     }
     fs.stat(url, function(err, fstats) {
         if (err) {
@@ -325,8 +323,6 @@ function setRgbColor(ai, color, brightness) {
         
         hsv['v'] = brightness;
         rgb = colorsys.hsvToRgb(hsv);
-        // console.log(format('rgb: {}', JSON.stringify(outRgb)));
-        // TODO this is returning 0 0 0 for everything?
 
         writeAmbient(ai, format('{} {} {}', rgb['r'], rgb['g'], rgb['b']), genErr);
         console.log('Setting color to "' + JSON.stringify(rgb) + '"');
@@ -345,7 +341,7 @@ function genErr(err) {
  */
 function writeAmbient(ai, content, errorCallback) {
     const filename = ai ? FILE_AI : FILE_AMBIENT;
-    fs.writeFile(filename, content + '\n' + Date.now(), errorCallback);
+    fs.writeFile(filename, content + '\n' + parseInt((Date.now() / 1000)), errorCallback);
 }
 
 /**
