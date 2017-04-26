@@ -13,7 +13,6 @@ from util import read_lines
 from util import safe_load
 
 class Behaviour:
-    # WEB_DIRECTORY = '/var/www/api/led_control'
     WEB_DIRECTORY = os.path.join(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)), 'remote'),
