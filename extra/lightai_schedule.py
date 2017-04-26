@@ -119,6 +119,7 @@ class ScheduleRenderer:
     def _get_js(self):
         return (
             '''
+            <script type="text/javascript">
             /*
              * Add borders to the row/column that correspond
              * to the current day and time
@@ -149,6 +150,7 @@ class ScheduleRenderer:
                 }
             }
             highlightNow();
+            </script>
             '''
         )
 
