@@ -5,7 +5,7 @@ from datetime import datetime
 from sklearn.externals import joblib
 
 
-# Generates a schedule from given training data so that you can see when
+# Generates a schedule from given training data so that you can see
 # an overview of what the model has learned
 class ScheduleRenderer:
     # Half-hour intervals for each day of the week
@@ -31,57 +31,34 @@ class ScheduleRenderer:
             f.write(self._get_html_start())
             f.write(self._get_table_headers())
 
-            indent = "\t\t\t\t"
             for entry in ScheduleRenderer.TEST_DATA:
                 day_of_week, second_of_day = entry
                 row = ""
 
                 if day_of_week == 0:
                     row += (
-                        indent +
-                        "<tr{}>\n".format(
-                            self._get_row_class(
-                                now,
-                                second_of_day
-                            )
-                        ) +
-                        indent +
-                        "\t<td{}>{}</td>\n".format(
-                            self._get_column_class(now, day_of_week),
+                        "<tr>\n" +
+                        "<td>{}</td>\n".format(
                             self._seconds_to_hour_min(second_of_day)
                         )
                     )
 
                 prediction = clf.predict([[day_of_week, second_of_day]])[0]
                 row += (
-                    indent +
-                    "\t<td{} style='background-color:{};'>{}</td>\n"
+                    "<td style='background-color:{};'>{}</td>\n"
                     .format(
-                        self._get_column_class(now, day_of_week),
                         self._get_cell_color(prediction),
                         prediction
                     )
                 )
 
                 if day_of_week == 6:
-                    row += indent + "</tr>\n"
+                    row += "</tr>\n"
 
                 f.write(row)
 
             f.write(self._get_html_end())
 
-    def _get_row_class(self, now, second_of_day):
-        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        now_seconds = (now - midnight).seconds
-
-        if second_of_day < now_seconds < second_of_day + 1800:
-            return " class='now'"
-        return ""
-
-    def _get_column_class(self, now, day_of_week):
-        if day_of_week == now.timetuple().tm_wday:
-            return " class='today'"
-        return ""
 
     # Convert brightness to alpha value
     def _get_cell_color(self, predicted_color):
@@ -106,31 +83,27 @@ class ScheduleRenderer:
             '', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
             'Saturday', 'Sunday'
         ]
-        indent = "\t\t\t\t"
         output = ""
         for x in column_headers:
-            output = output + indent + "\t<th>{}</th>\n".format(x)
-        return output + indent + "</tr>\n"
+            output = output + "<th>{}</th>\n".format(x)
+        return output + "</tr>\n"
 
     def _get_html_start(self):
         return (
-            "<html>\n\t<head>\n\t\t<title>Expected schedule" +
-            "</title>\n\t\t" +
+            "<html>\n<head>\n<title>Expected schedule</title>\n" +
             self._get_html_style() +
-            "\n\t</head>\n\t<body>\n\t\t<main>\n\t\t\t" +
-            "<table>\n\t\t\t\t<tr class='header_row'>\n\t\t\t\t\t"
+            "\n</head>\n<body>\n<main>\n" +
+            "<table>\n<tr class='header_row'>\n"
         )
 
     def _get_html_end(self):
         return (
-            "\n\t\t\t</table>\n\t\t</main>\n\t</body><footer>" +
+            "\n</table>\n</main>\n" + self._get_js() + "\n</body><footer>" +
             "Last update: {}</footer>\n</html>"
             .format(datetime.now().strftime("%Y-%m-%d at %H:%M"))
         )
 
     def _get_html_style(self):
-        # Uncomment this if you want to use an external stylesheet
-        # return "<link rel='stylesheet' type='text/css' href='styles.css'>"
         return (
             "<style>\n" +
             "html{font-family:monospace;background-color:#444;color:#ddd;}" +
@@ -141,6 +114,42 @@ class ScheduleRenderer:
             "border-right:1px dashed grey;} " +
             ".now{padding:32px !important;border-top:1px dashed grey;" +
             "border-bottom:1px dashed grey;}\n</style>"
+        )
+
+    def _get_js(self):
+        return (
+            '''
+            /*
+             * Add borders to the row/column that correspond
+             * to the current day and time
+             */
+            function highlightNow() {
+                const highlightBorderStyle = '2px solid #cccccc';
+                const now = new Date();
+                const today = now.getDay();
+                const hour = now.getHours();
+                const minutes = now.getMinutes() > 30 ? 30 : 0;
+
+                const interval = 30; // interval for each row in minutes
+                const column = today == 0 ? 6 : today;
+                const nowTime = (hour < 10 ? '0' : '') + hour + ':' + (minutes < 10 ? '0' : '') + minutes;
+                const rows = document.getElementsByTagName('tr');
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const tds = row.getElementsByTagName('td');
+                    const col = tds[column];
+                    if (col) {
+                        col.style.borderLeft = col.style.borderRight = highlightBorderStyle;
+                    }
+                    const rowTitle = tds[0];
+                    if (rowTitle && nowTime == rowTitle.innerText) {
+                        row.style.borderTop = row.style.borderBottom = highlightBorderStyle;
+                    }
+                }
+            }
+            highlightNow();
+            '''
         )
 
 
@@ -155,3 +164,7 @@ def load_saved_model(file):
     if file is None or file == '':
         raise ValueError('Error loading saved model "{}"'.format(file))
     return joblib.load(file)
+
+if __name__ == '__main__':
+    clf = joblib.load('model.pkl')
+    renderer = ScheduleRenderer(clf, 'test.html')
