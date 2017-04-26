@@ -10,8 +10,6 @@ import argparse
 from datetime import datetime
 
 from time import sleep
-# import urllib.parse
-# import urllib.request
 import requests
 
 from lightai_schedule import ScheduleRenderer
@@ -22,13 +20,10 @@ from sklearn.externals import joblib
 SCHEDULE_OUTPUT_FILENAME = 'schedule.html'
 
 
-# Training data includes day_of_year so that we can take the changing length
-# of the day from summer to winter into account. However, this is not worth
-# using until at least a year's worth of training data.
-# Because of this, our model currently ignores the day_of_year data,
-# but try enabling it after you've been running the tracker for at
-# least a year!
-USE_DAY_OF_YEAR = False
+# day_of_year probably won't have any useful effect until at least
+# a year's worth of usage data has been collected. If USE_DAY_OF_YEAR
+# is False the day_of_year will be ignored when training the model
+USE_DAY_OF_YEAR = True
 
 # URL which handles lighting commands - this should point to your
 # node.js server
@@ -66,9 +61,6 @@ class LightAI:
                 'rgb': rgb
             }
             requests.get(LIGHTING_URL, data)
-            # data = urllib.parse.urlencode({'ai': '', 'rgb': rgb})
-            # data = data.encode('ascii')
-            # urllib.request.urlopen(LIGHTING_URL, data)
             self.color = rgb
 
 
