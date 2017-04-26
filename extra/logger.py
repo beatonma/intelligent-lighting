@@ -12,7 +12,6 @@ from os.path import exists
 from sys import exit
 
 FILE_DAT = "led_usage_log.dat"
-# WEB_ROOT = "/var/www/api/led_control/"
 WEB_ROOT = "../remote/status/"
 FILE_CANONICAL = WEB_ROOT + "canonical"
 
