@@ -9,9 +9,9 @@ from behaviour import *
 
 from util import log
 from util import read_line
-from util import read_lines
 from util import safe_load
 
+# If DEBUG, errors will halt the program
 DEBUG = False
 WEB_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'remote')
 STATUS_ROOT = os.path.join(WEB_ROOT, 'status')
@@ -44,17 +44,28 @@ class Lights:
         self.inactivity_behaviour = Behaviour.get(
             self.preferences.inactivity_behaviour_id)
         self.mech_behaviour = Behaviour.get(Behaviour.MECH)
+        self.notification_handler = NotificationHandler(self.preferences)
+        print('Loaded preferences:\n{}'.format(self.preferences.prettyprint()))
 
     def update(self):
         now = datetime.now()
         self._refresh_preferences()
 
-        color = read_line(FILE_AMBIENT)
+        with open(FILE_AMBIENT, 'r') as f:
+            lines = f.readlines()
+            if lines:
+                color = lines[0]
+                timestamp = int(lines[1])
 
-        color, is_canonical = self.inactivity_behaviour.update(color, now)
+        is_canonical = True
+        if now.timestamp() - timestamp > self.preferences.inactivity_timeout:
+            color, is_canonical = self.inactivity_behaviour.update(color, now)
 
         if is_canonical:
             self._update_canonical(color)
+
+        # Get notification color, if there are active notifications
+        color = self.notification_handler.update(color)
 
         self.led_controller.set_preferences(self.preferences)
         self.led_controller.set_color(color)
@@ -69,6 +80,8 @@ class Lights:
             print('new behaviour: {}'.format(
                 self.inactivity_behaviour.to_string()))
 
+        self.notification_handler.update_preferences(self.preferences)
+
         self.inactivity_behaviour.set_preferences(
             self.preferences.inactivity_behaviour_options)
 
@@ -80,15 +93,36 @@ class Lights:
 
 class NotificationHandler:
 
-    def __init__(self):
+    def __init__(self, preferences):
         self.index = 0
+        self.last_pulse_timestamp = datetime.now()
+        self.update_preferences(preferences)
 
-    def update(self):
-        notifications = read_lines(FILE_NOTIFICATIONS)
-        if notifications:
-            self.index = (self.index + 1) % len(notifications)
-            n = notifications[self.index]
-            # TODO
+    def update(self, fallback_color):
+        if not self.enabled:
+            return fallback_color
+        now = datetime.now()
+        time_diff = (now - self.last_pulse_timestamp).seconds
+        if time_diff > self.pulse_frequency:
+            if time_diff > self.pulse_duration + self.pulse_frequency:
+                # End the pulse
+                self.last_pulse_timestamp = now
+            with open(FILE_NOTIFICATIONS, 'r') as f:
+                notifications = json.load(f)
+                if notifications:
+                    self.index = (self.index + 1) % len(notifications)
+                    n = notifications[self.index]
+                    return safe_load(n, 'rgb', fallback_color)
+
+        return fallback_color
+
+    def update_preferences(self, preferences):
+        self.enabled = safe_load(
+            preferences, 'pref_notifications_enabled', True)
+        self.pulse_frequency = safe_load(
+            preferences, 'pref_notifications_pulse_frequency', 5)
+        self.pulse_duration = safe_load(
+            preferences, 'pref_notifications_pulse_duration', 1)
 
 
 class Preferences:
@@ -96,6 +130,7 @@ class Preferences:
     def __init__(self):
         self.refresh()
 
+    # Reload preferences from file
     def refresh(self, file=FILE_PREFERENCES):
         with open(file) as f:
             j = None
@@ -117,6 +152,21 @@ class Preferences:
                 j, 'pref_inactivity_behaviour_options', {})
             self.notifications_enabled = safe_load(
                 j, 'pref_notifications_enabled', False)
+            self.notifications_pulse_frequency = safe_load(
+                j, 'pref_notifications_pulse_frequency', 30)
+
+    def prettyprint(self):
+        return (
+            'max_brightness: {}\n'.format(self.max_brightness) +
+            'min_brightness: {}\n'.format(self.min_brightness) +
+            'interpolate_color_changes: {}\n'.format(self.color_change_interpolate) +
+            'color_change_duration: {}\n'.format(self.color_change_duration) +
+            'inactivity_timeout: {}\n'.format(self.inactivity_timeout) +
+            'inactivity_behaviour_id: {}\n'.format(self.inactivity_behaviour_id) +
+            'inactivity_behaviour_options: {}\n'.format(self.inactivity_behaviour_options) +
+            'notifications_enabled: {}\n'.format(self.notifications_enabled) +
+            'notifications_pulse_frequency: {}\n'.format(self.notifications_pulse_frequency)
+        )
 
 if __name__ == '__main__':
     init_files()
@@ -125,7 +175,8 @@ if __name__ == '__main__':
     try:
         while True:
             if DEBUG:
-                lights.update()  # Allow error messages to halt execution
+                # Allow error messages to halt execution
+                lights.update()
             else:
                 try:
                     lights.update()
