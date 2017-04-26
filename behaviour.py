@@ -12,10 +12,12 @@ from util import read_line
 from util import read_lines
 from util import safe_load
 
-
 class Behaviour:
-    WEB_DIRECTORY = '/var/www/api/led_control/'
-
+    # WEB_DIRECTORY = '/var/www/api/led_control'
+    WEB_DIRECTORY = os.path.join(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), 'remote'),
+        'status')
     NONE = 0
     CYCLE = 1
     DISCO = 2
@@ -25,7 +27,7 @@ class Behaviour:
     MECH = 6
 
     # Restrict any bpm-based behaviours to a minimum beat duration (in seconds)
-    #  to prevent unpleasant flickering/strobing
+    # to prevent unpleasant flickering/strobing
     MIN_BEAT_DURATION = 0.25
 
     @staticmethod
@@ -210,7 +212,8 @@ class SpookyBehaviour(Behaviour):
 
         # This can be removed or reduced if you are sure that nobody
         # is likely to suffer adverse affects from flashing lights
-        sleep(0.5)
+        if self.restricted:
+            sleep(0.5)
 
         return color.set_brightness(fallback_color, brightness), False
 
@@ -220,6 +223,7 @@ class SpookyBehaviour(Behaviour):
 
         self.high_duration = safe_load(prefs, 'high_duration', 1.5)
         self.low_duration = safe_load(prefs, 'low_duration', 5.0)
+        self.restricted = safe_load(prefs, 'restricted', True)
 
     def to_string(self):
         return "SpookyBehaviour[]: WARNING: THIS MAY BE A HEALTH HAZARD"
@@ -244,8 +248,8 @@ class AIBehaviour(Behaviour):
             self.color = fallback_color
         color = read_line(AIBehaviour.AI_AMBIENT_FILE)
         if color != "":
-            # Cache a copy of the color to prevent flickering in case of file
-            # read errors
+            # Cache a copy of the color to prevent flickering
+            # in case of file read errors
             self.color = color
         return self.color, True
 
