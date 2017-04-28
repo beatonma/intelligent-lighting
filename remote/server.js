@@ -182,7 +182,7 @@ function serveGui(response) {
     fs.readFile('index.html', function(err, data) {
         if (err) {
             response.statusCode = 404;
-            response.end('Error');
+            response.end('Error:' + err);
         }
         else {
             response.setHeader('Content-type', 'text/html');
