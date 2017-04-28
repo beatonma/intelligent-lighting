@@ -4,12 +4,14 @@ import shutil
 import sys
 import re
 
+USERNAME = 'lights'
 RCLOCAL = '/etc/rc.local'
 INSTALL_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
 # Commands which can be added to RCLOCAL
 START_NODE_SERVER = (
-    '/usr/bin/nodejs {}/remote/server.js &\n'.format(INSTALL_DIRECTORY)
+    'cd {}/remote/ && su {} -c "/usr/bin/nodejs server.js &" &\n'
+        .format(INSTALL_DIRECTORY, USERNAME)
 )
 START_MAIN = '/usr/bin/python3 {}/main.py &\n'.format(INSTALL_DIRECTORY)
 START_LIGHT_AI = (
