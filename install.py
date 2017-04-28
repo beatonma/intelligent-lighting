@@ -4,7 +4,7 @@ import shutil
 import sys
 import re
 
-RCLOCAL = '/etc/rc.local.test'
+RCLOCAL = '/etc/rc.local'
 INSTALL_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
 # Commands which can be added to RCLOCAL
