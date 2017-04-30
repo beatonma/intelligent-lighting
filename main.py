@@ -130,12 +130,15 @@ class NotificationHandler:
             if time_diff > self.pulse_duration + self.pulse_frequency:
                 # End the pulse
                 self.last_pulse_timestamp = now
-            with open(FILE_NOTIFICATIONS, 'r') as f:
-                notifications = json.load(f)
-                if notifications:
-                    self.index = (self.index + 1) % len(notifications)
-                    n = notifications[self.index]
-                    return safe_load(n, 'rgb', fallback_color)
+            try:
+                with open(FILE_NOTIFICATIONS, 'r') as f:
+                    notifications = json.load(f)
+                    if notifications:
+                        self.index = (self.index + 1) % len(notifications)
+                        n = notifications[self.index]
+                        return safe_load(n, 'rgb', fallback_color)
+            except:
+                pass
 
         return fallback_color
 
