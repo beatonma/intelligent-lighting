@@ -176,7 +176,10 @@ def install_rclocal(args):
                 outlines.append(START_NODE_SERVER)
                 print('Enabled nodejs server')
 
-            if args.enable_ml and not lightai_already_installed:
+            if ((args.enable_ml or
+                input('Would you like to enable LightAI? (y/n)') == 'y') and
+                not lightai_already_installed):
+            
                 outlines.append(START_LIGHT_AI)
                 print('Enabled LightAI')
             else:
