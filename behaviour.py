@@ -4,6 +4,8 @@ from math import sin
 from random import random
 from time import sleep
 
+import os
+
 import color
 
 from color import Color
