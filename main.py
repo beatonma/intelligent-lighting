@@ -196,7 +196,7 @@ if __name__ == '__main__':
 
     pin_red, pin_green, pin_blue = get_pins()
 
-    lights = Lights(red_pin, blue_pin, green_pin)
+    lights = Lights(pin_red, pin_green, pin_blue)
     try:
         while True:
             if DEBUG:
