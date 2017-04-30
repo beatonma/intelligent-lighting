@@ -1,9 +1,10 @@
 from argparse import ArgumentParser
+import json
 import os
-import shutil
-import sys
 import re
+import shutil
 import subprocess
+import sys
 
 #
 # This script will install necessary Node.js modules,
@@ -15,6 +16,7 @@ import subprocess
 USERNAME = 'lights'
 RCLOCAL = '/etc/rc.local'
 INSTALL_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
+CONFIG_FILE_PINS = os.path.join(INSTALL_DIRECTORY, 'pins.json')
 
 # Commands which can be added to RCLOCAL
 START_NODE_SERVER = (
@@ -31,20 +33,84 @@ START_LIGHT_AI = (
 )
 
 
+# Ask the user which GPIO pins are being used for each colour and
+# save answers to json file
+#
+# TODO correspond code needs to be implemented in main.py for this
+# to be useful
+def setup_gpio_pins(args):
+    print('')
+    print('GPIO pin configuration')
+    print('')
+    print('We need to make sure the program knows which pin leads to ' +
+        'each colour of LED')
+    print('If you are not sure about the following questions please see ' +
+        'https://beatonma.org/intelligent-lighting#gpio_map for a ' +
+        'reference diagram')
+    
+    pin_red = get_color_from_user('RED')
+    pin_green = get_color_from_user('GREEN', [pin_red])
+    pin_blue = get_color_from_user('BLUE', [pin_red, pin_green])
+
+    pins = {
+        'pin_red': pin_red,
+        'pin_green': pin_green,
+        'pin_blue': pin_blue
+    }
+
+    with open(CONFIG_FILE_PINS, 'w') as f:
+        json.dump(pins, f)
+
+
+# invalid_numbers is a list of numbers that are already taken
+def get_color_from_user(color_name, invalid_numbers=[]):
+    pin_number = -1
+
+    while pin_number < 0:
+        try:
+            n = int(
+                input('\nWhat pin number should be used for {} signal?\n'
+                    .format(color_name)))
+            if 0 < n < 27:
+                if n in invalid_numbers:
+                    print('This number has already been entered for ' +
+                        'another colour. Please check your wiring and ' +
+                        'try again.\n')
+                else:
+                    pin_number = n
+                    
+            else:
+                print('Invalid input - please enter the GPIO number ' + 
+                    'corresponding to the color {}'.format(color_name))
+                print('If you are not sure please see ' +
+                    'https://beatonma.org/intelligent-lighting#gpio_map ' +
+                    'for a reference diagram\n')
+        except Exception as e:
+            print('Invalid input - please enter the GPIO number ' + 
+                'corresponding to the color {}'.format(color_name))
+            print('If you are not sure please see ' +
+                'https://beatonma.org/intelligent-lighting#gpio_map ' +
+                'for a reference diagram\n')
+            print('')
+    return pin_number
+
+
 def install_user(args):
-    print('Creating new user "{}"...'.format(USERNAME))
+    print('\n\nCreating new user "{}"...'.format(USERNAME))
     subprocess.call('useradd {}'.format(USERNAME), shell=True)
     subprocess.call(
         'chown -R {}:{} {}'
             .format(USERNAME, USERNAME, INSTALL_DIRECTORY), shell=True)
 
+
 def install_npm_modules(args):
-    print('Installing Node.js modules to {}/remote...'
+    print('\n\nInstalling Node.js modules to {}/remote...'
             .format(INSTALL_DIRECTORY))
     subprocess.call(
         'cd {}/remote && npm install --save colorsys'
             .format(INSTALL_DIRECTORY),
          shell=True)
+
 
 def install_rclocal(args):
     try:
@@ -53,7 +119,7 @@ def install_rclocal(args):
     except IOError as e:
         sys.exit('Error making backup of "{}". Did you run with sudo? {}'
             .format(RCLOCAL, e))
-    print('Made backup of "{}" to "{}.bak"'.format(RCLOCAL, RCLOCAL))
+    print('\n\nMade backup of "{}" to "{}.bak"'.format(RCLOCAL, RCLOCAL))
 
     rclocal_contents = []
     try:
@@ -146,8 +212,9 @@ argparser.add_argument(
 
 args = argparser.parse_args()
 
+setup_gpio_pins(args)
 install_npm_modules(args)
 install_user(args)
 install_rclocal(args)
 
-print('Install complete! Intelligent Lighting will now run on system startup.')
+print('\n\nInstall complete! Intelligent Lighting will now run on system startup.')
