@@ -2,6 +2,7 @@ import datetime
 import os
 
 DATEFORMAT = "%y/%m/%d %H:%M:%S"
+LOG_TO_FILE = False
 LOG_FILE = "log.txt"
 
 
@@ -17,16 +18,17 @@ def log(text):
     log_text = get_timestamp() + get_script_name() + text + '\r\n'
     print(log_text)
 
-    lines = []
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, 'r') as f:
-            lines = f.readlines()[-9:]
+    if LOG_TO_FILE:
+        lines = []
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, 'r') as f:
+                lines = f.readlines()[-9:]
 
-    with open(LOG_FILE, 'w') as f:
-        for l in lines:
-            f.write(l)
+        with open(LOG_FILE, 'w') as f:
+            for l in lines:
+                f.write(l)
 
-        f.write(log_text)
+            f.write(log_text)
 
 
 def get_timestamp():
