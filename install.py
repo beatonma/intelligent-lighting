@@ -16,7 +16,17 @@ import sys
 USERNAME = 'lights'
 RCLOCAL = '/etc/rc.local'
 INSTALL_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
+LIGHTAI_DIRECTORY = os.path.join(INSTALL_DIRECTORY, 'extra')
+WEB_DIRECTORY = os.path.join(INSTALL_DIRECTORY, 'remote')
+STATUS_DIRECTORY = os.path.join(WEB_ROOT, 'status')
+
 CONFIG_FILE_PINS = os.path.join(INSTALL_DIRECTORY, 'pins.json')
+
+STATUS_FILE_AMBIENT = os.path.join(STATUS_DIRECTORY, 'ambient')
+STATUS_FILE_NOTIFICATIONS = os.path.join(STATUS_DIRECTORY, 'notifications')
+STATUS_FILE_AI = os.path.join(STATUS_DIRECTORY, 'ambient_ai')
+STATUS_FILE_CANONICAL = os.path.join(STATUS_DIRECTORY, 'canonical')
+CONFIG_FILE_PREFERENCES = os.path.join(STATUS_DIRECTORY, 'prefs')
 
 # Commands which can be added to RCLOCAL
 START_NODE_SERVER = (
@@ -26,18 +36,25 @@ START_NODE_SERVER = (
 START_MAIN = '/usr/bin/python3 {}/main.py &\n'.format(INSTALL_DIRECTORY)
 START_LIGHT_AI = (
     '/usr/bin/python3 ' +
-    '{}/extra/light_ai.py '.format(INSTALL_DIRECTORY) +
-    '--data {}/extra/led_usage_log.dat '.format(INSTALL_DIRECTORY) +
-    '--save_as {}/extra/model.pkl '.format(INSTALL_DIRECTORY) +
+    '{}/light_ai.py '.format(LIGHTAI_DIRECTORY) +
+    '--data {}/led_usage_log.dat '.format(LIGHTAI_DIRECTORY) +
+    '--save_as {}/model.pkl '.format(LIGHTAI_DIRECTORY) +
     '--update_interval 3 &\n'
+)
+
+# Command to add to crontab if LightAI is enabled (for logging)
+CRON_LIGHTAI_LOGGER = (
+    '(sudo crontab -l ; ' +
+    'echo "*/15 * * * * cd {} && '.format(LIGHTAI_DIRECTORY) +
+    '/usr/bin/python3 {}/lightai_logger.py '.format(LIGHTAI_DIRECTORY) +
+    '{}'.format(STATUS_DIRECTORY) +
+    '")| ' +
+    'sudo crontab -'
 )
 
 
 # Ask the user which GPIO pins are being used for each colour and
 # save answers to json file
-#
-# TODO correspond code needs to be implemented in main.py for this
-# to be useful
 def setup_gpio_pins(args):
     print('')
     print('GPIO pin configuration')
@@ -95,6 +112,7 @@ def get_color_from_user(color_name, invalid_numbers=[]):
     return pin_number
 
 
+# 
 def install_user(args):
     print('\n\nCreating new user "{}"...'.format(USERNAME))
     subprocess.call('useradd {}'.format(USERNAME), shell=True)
@@ -103,15 +121,37 @@ def install_user(args):
             .format(USERNAME, USERNAME, INSTALL_DIRECTORY), shell=True)
 
 
+# The Node.js server requires the colorsys module to help with
+# converting colours between different formats e.g. RGB to HSV
 def install_npm_modules(args):
-    print('\n\nInstalling Node.js modules to {}/remote...'
-            .format(INSTALL_DIRECTORY))
+    print('\n\nInstalling Node.js modules to {}...'
+            .format(WEB_DIRECTORY))
     subprocess.call(
-        'cd {}/remote && npm install --save colorsys'
-            .format(INSTALL_DIRECTORY),
+        'cd {} && npm install --save colorsys'
+            .format(WEB_DIRECTORY),
          shell=True)
 
 
+# If LightAI is being enabled, add the logger script to crontab.
+# The logger script records what colour the lights are currently set to,
+# so over time it builds a dataset that can be used to train a model
+# which can then be used to automatically set your lights to the right
+# colour to fit your schedule.
+# You can view the logged data in plain text in the file
+# {INSTALL_DIRECTORY}/extra/led_usage_log.dat
+def install_lightai_crontab(args):
+    print('Adding LightAI logger to crontab...')
+    subprocess.call(CRON_LIGHTAI_LOGGER, shell=True)
+    # subprocess.call(
+    #     '(sudo crontab -l ; ' +
+    #     'echo "*/15 * * * * cd {} && '.format(LIGHTAI_DIRECTORY) +
+    #     '/usr/bin/python3 {}/lightai_logger.py")| '.format(LIGHTAI_DIRECTORY) +
+    #     'sudo crontab -'
+    #     shell=True)
+
+
+# Add necessary scripts to file /etc/rc.local so that they
+# will run automatically when the system boots up
 def install_rclocal(args):
     try:
         # Make a backup of RCLOCAL in case something goes wrong
@@ -176,10 +216,7 @@ def install_rclocal(args):
                 outlines.append(START_NODE_SERVER)
                 print('Enabled nodejs server')
 
-            if ((args.enable_ml or
-                input('Would you like to enable LightAI? (y/n)') == 'y') and
-                not lightai_already_installed):
-            
+            if args.enable_ml and not lightai_already_installed:
                 outlines.append(START_LIGHT_AI)
                 print('Enabled LightAI')
             else:
@@ -200,7 +237,30 @@ def install_rclocal(args):
         print('Error writing to "{}": {}'.format(RCLOCAL, e))
 
 
-
+# Initiate the files that will be used for storing the 
+def init_status_files(args):
+    if not os.path.exists(STATUS_DIRECTORY):
+        os.makedirs(STATUS_DIRECTORY)
+    for f in [
+        STATUS_FILE_AMBIENT,
+        STATUS_FILE_NOTIFICATIONS,
+        CONFIG_FILE_PREFERENCES,
+        STATUS_FILE_AI,
+        STATUS_FILE_CANONICAL
+    ]:
+        if not os.path.exists(f):
+            with open(f, 'w') as file:
+                if f in [
+                    STATUS_FILE_AMBIENT,
+                    STATUS_FILE_CANONICAL,
+                    STATUS_FILE_AI
+                ]:
+                    file.write('255 255 255\n0')
+                elif f in [
+                    STATUS_FILE_NOTIFICATIONS,
+                    CONFIG_FILE_PREFERENCES
+                ]:
+                    file.write('{}')
 
 
 print('intelligent-lighting is installed to {}'.format(INSTALL_DIRECTORY))
@@ -215,9 +275,16 @@ argparser.add_argument(
 
 args = argparser.parse_args()
 
+if not args.enable_ml:
+    args.enable_ml = input('Would you like to enable LightAI? (y/n)') == 'y'
+
 setup_gpio_pins(args)
 install_npm_modules(args)
 install_user(args)
+init_status_files(args)
+
 install_rclocal(args)
+if args.enable_ml:
+    install_lightai_crontab(args)
 
 print('\n\nInstall complete! Intelligent Lighting will now run on system startup.')
