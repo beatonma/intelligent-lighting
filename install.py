@@ -34,6 +34,10 @@ STATUS_FILE_AI = os.path.join(STATUS_DIRECTORY, 'ambient_ai')
 STATUS_FILE_CANONICAL = os.path.join(STATUS_DIRECTORY, 'canonical')
 CONFIG_FILE_PREFERENCES = os.path.join(STATUS_DIRECTORY, 'prefs')
 
+# If LightAI is enabled, an overview of the expected schedule will
+# be output here.
+STATUS_FILE_SCHEDULE = os.path.join(WEB_DIRECTORY, 'schedule.html')
+
 # Commands which can be added to RCLOCAL
 START_NODE_SERVER = (
     'cd {}/remote/ && su {} -c "/usr/bin/nodejs server.js &" &\n'
@@ -45,6 +49,7 @@ START_LIGHT_AI = (
     '{}/light_ai.py '.format(LIGHTAI_DIRECTORY) +
     '--data {}/led_usage_log.dat '.format(LIGHTAI_DIRECTORY) +
     '--save_as {}/model.pkl '.format(LIGHTAI_DIRECTORY) +
+    '--save_schedule {} '.format(STATUS_FILE_SCHEDULE) +
     '--update_interval 3 &\n'
 )
 
