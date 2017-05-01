@@ -45,12 +45,13 @@ START_NODE_SERVER = (
 )
 START_MAIN = '/usr/bin/python3 {}/main.py &\n'.format(INSTALL_DIRECTORY)
 START_LIGHT_AI = (
+    'su {} -c "'.format(USERNAME) +
     '/usr/bin/python3 ' +
     '{}/light_ai.py '.format(LIGHTAI_DIRECTORY) +
     '--data {}/led_usage_log.dat '.format(LIGHTAI_DIRECTORY) +
     '--save_as {}/model.pkl '.format(LIGHTAI_DIRECTORY) +
     '--save_schedule {} '.format(STATUS_FILE_SCHEDULE) +
-    '--update_interval 3 &\n'
+    '--update_interval 3 &" &\n'
 )
 
 # Command to add to crontab if LightAI is enabled (for logging)
