@@ -17,9 +17,6 @@ from lightai_schedule import ScheduleRenderer
 from sklearn import tree
 from sklearn.externals import joblib
 
-SCHEDULE_OUTPUT_FILENAME = 'schedule.html'
-
-
 # day_of_year probably won't have any useful effect until at least
 # a year's worth of usage data has been collected. If USE_DAY_OF_YEAR
 # is False the day_of_year will be ignored when training the model
@@ -120,7 +117,7 @@ def save_model(clf, save_file, data_file='default_filename'):
             )
     joblib.dump(clf, save_file)
 
-    ScheduleRenderer(clf, SCHEDULE_OUTPUT_FILENAME)
+    ScheduleRenderer(clf, args.save_schedule)
 
 
 def load_saved_model(file):
@@ -146,25 +143,26 @@ if __name__ == '__main__':
     parser.add_argument(
         '--data',
         type=str,
-        help='Filename for data file to be used for training (.dat file)'
-    )
+        help='Filename for data file to be used for training (.dat file)')
     parser.add_argument(
         '--save_as',
         type=str,
-        help='Filename for saving the output classifier (.pkl file)'
-    )
+        help='Filename for saving the output classifier (.pkl file)')
     parser.add_argument(
         '--update_interval',
         type=int,
         help='Regularly re-train the classifier using the same input ' +
              'filename (Interval in hours)',
-        default=-1
-    )
+        default=-1)
     parser.add_argument(
         '--saved_classifier',
         type=str,
-        help='Define a previously stored classifier (.pkl file)'
-    )
+        help='Define a previously stored classifier (.pkl file)')
+    parser.add_argument(
+        '--save_schedule',
+        type=str,
+        default='schedule.html',
+        help='Filename for the generated schedule html file')
 
     args = parser.parse_args()
     clf = None
