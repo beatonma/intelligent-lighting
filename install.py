@@ -144,7 +144,9 @@ def install_lightai_crontab(args):
     print('Adding LightAI logger to crontab...')
     subprocess.call(CRON_LIGHTAI_LOGGER, shell=True)
     subprocess.call(
-        '/usr/bin/python3 {}/lightai_logger.py'.format(LIGHTAI_DIRECTORY),
+        '/usr/bin/python3 {}/lightai_logger.py '.format(LIGHTAI_DIRECTORY) +
+        '{} '.format(STATUS_DIRECTORY) +
+        '{}/led_usage_log.dat'.format(LIGHTAI_DIRECTORY),
         shell=True)
     # subprocess.call(
     #     '(sudo crontab -l ; ' +
