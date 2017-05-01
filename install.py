@@ -18,7 +18,7 @@ RCLOCAL = '/etc/rc.local'
 INSTALL_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 LIGHTAI_DIRECTORY = os.path.join(INSTALL_DIRECTORY, 'extra')
 WEB_DIRECTORY = os.path.join(INSTALL_DIRECTORY, 'remote')
-STATUS_DIRECTORY = os.path.join(WEB_ROOT, 'status')
+STATUS_DIRECTORY = os.path.join(WEB_DIRECTORY, 'status')
 
 CONFIG_FILE_PINS = os.path.join(INSTALL_DIRECTORY, 'pins.json')
 
