@@ -28,7 +28,6 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# FILE_DAT = 'led_usage_log.dat'
 FILE_DAT = args.savefile
 WEB_ROOT = args.webroot
 FILE_CANONICAL = os.path.join(WEB_ROOT, 'canonical')
