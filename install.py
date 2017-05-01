@@ -284,10 +284,11 @@ print('LightAI will be enabled'
 setup_gpio_pins(args)
 install_npm_modules(args)
 init_status_files(args)
-install_user(args)
 
 install_rclocal(args)
 if args.enable_ml:
     install_lightai_crontab(args)
+
+install_user(args)
 
 print('\n\nInstall complete! Intelligent Lighting will now run on system startup.')
