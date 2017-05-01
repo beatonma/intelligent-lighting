@@ -45,9 +45,10 @@ START_LIGHT_AI = (
 # Command to add to crontab if LightAI is enabled (for logging)
 CRON_LIGHTAI_LOGGER = (
     '(sudo crontab -l ; ' +
-    'echo "*/15 * * * * cd {} && '.format(LIGHTAI_DIRECTORY) +
+    'echo "*/15 * * * * '.format(LIGHTAI_DIRECTORY) +
     '/usr/bin/python3 {}/lightai_logger.py '.format(LIGHTAI_DIRECTORY) +
-    '{}'.format(STATUS_DIRECTORY) +
+    '{} '.format(STATUS_DIRECTORY) +
+    '{}/led_usage_log.dat'.format(LIGHTAI_DIRECTORY) +
     '")| ' +
     'sudo crontab -'
 )
@@ -276,7 +277,7 @@ argparser.add_argument(
 args = argparser.parse_args()
 
 if not args.enable_ml:
-    args.enable_ml = input('Would you like to enable LightAI? (y/n)') == 'y'
+    args.enable_ml = input('Would you like to enable LightAI? (y/n)\n') == 'y'
 
 setup_gpio_pins(args)
 install_npm_modules(args)
