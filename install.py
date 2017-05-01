@@ -143,6 +143,9 @@ def install_npm_modules(args):
 def install_lightai_crontab(args):
     print('Adding LightAI logger to crontab...')
     subprocess.call(CRON_LIGHTAI_LOGGER, shell=True)
+    subprocess.call(
+        '/usr/bin/python3 {}/lightai_logger.py'.format(LIGHTAI_DIRECTORY),
+        shell=True)
     # subprocess.call(
     #     '(sudo crontab -l ; ' +
     #     'echo "*/15 * * * * cd {} && '.format(LIGHTAI_DIRECTORY) +
@@ -281,8 +284,8 @@ if not args.enable_ml:
 
 setup_gpio_pins(args)
 install_npm_modules(args)
-install_user(args)
 init_status_files(args)
+install_user(args)
 
 install_rclocal(args)
 if args.enable_ml:
