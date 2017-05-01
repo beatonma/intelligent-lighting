@@ -38,7 +38,8 @@ const mimeTypes = {
 const staticFilesWhitelist = [
     'favicon.ico',
     'index.html',
-    'prefs'
+    'prefs',
+    'schedule.html'
 ];
 const staticFilesRedirects = {
     'prefs': FILE_PREFERENCES,
