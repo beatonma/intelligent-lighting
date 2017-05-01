@@ -7,10 +7,16 @@ import subprocess
 import sys
 
 #
-# This script will install necessary Node.js modules,
-# create a new user account for this project and
-# write to /etc/rc.local so that the control scripts
-# and server start on system startup.
+# This script will:
+# - ask you if you want to enable LightAI
+# - ask you which GPIO pins your LEDs are attached to
+# - install necessary Node.js modules
+# - initiate status files for this project
+# - write to /etc/rc.local so that the control scripts
+#   and server start on system startup
+# - if LightAI is enabled, write an entry to crontab to schedule
+#   lightai_logger.py to run every 15 minutes
+# - create a new user account for this project
 # 
 
 USERNAME = 'lights'
@@ -113,7 +119,8 @@ def get_color_from_user(color_name, invalid_numbers=[]):
     return pin_number
 
 
-# 
+# Make a new user and transfer ownership of all project files
+# to that account
 def install_user(args):
     print('\n\nCreating new user "{}"...'.format(USERNAME))
     subprocess.call('useradd {}'.format(USERNAME), shell=True)
