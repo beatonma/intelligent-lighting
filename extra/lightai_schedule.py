@@ -7,6 +7,7 @@ from sklearn.externals import joblib
 
 # Generates a schedule from given training data so that you can see
 # an overview of what the model has learned
+# You can view the page at <server_address>:8080/schedule.html
 class ScheduleRenderer:
     # Half-hour intervals for each day of the week
     TEST_DATA = [
