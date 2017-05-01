@@ -148,12 +148,6 @@ def install_lightai_crontab(args):
         '{} '.format(STATUS_DIRECTORY) +
         '{}/led_usage_log.dat'.format(LIGHTAI_DIRECTORY),
         shell=True)
-    # subprocess.call(
-    #     '(sudo crontab -l ; ' +
-    #     'echo "*/15 * * * * cd {} && '.format(LIGHTAI_DIRECTORY) +
-    #     '/usr/bin/python3 {}/lightai_logger.py")| '.format(LIGHTAI_DIRECTORY) +
-    #     'sudo crontab -'
-    #     shell=True)
 
 
 # Add necessary scripts to file /etc/rc.local so that they
@@ -283,6 +277,9 @@ args = argparser.parse_args()
 
 if not args.enable_ml:
     args.enable_ml = input('Would you like to enable LightAI? (y/n)\n') == 'y'
+
+print('LightAI will be enabled'
+    if args.enable_ml else 'LightAI will not be enabled')
 
 setup_gpio_pins(args)
 install_npm_modules(args)
