@@ -7,6 +7,8 @@ import subprocess
 import sys
 
 #
+# Requires root!
+# 
 # This script will:
 # - ask you if you want to enable LightAI
 # - ask you which GPIO pins your LEDs are attached to
@@ -275,6 +277,18 @@ def init_status_files(args):
                 ]:
                     file.write('{}')
 
+
+def check_root_privileges():
+    try:
+        filename = '/intelligent-lighting-root-check.txt'
+        with open(filename, 'w') as f:
+            pass
+        os.remove(filename)
+    except:
+        exit('Root check failed - please run this script again with root priveleges (i.e. sudo python3 install.py)')
+
+
+check_root_privileges()
 
 print('intelligent-lighting is installed to {}'.format(INSTALL_DIRECTORY))
 
