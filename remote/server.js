@@ -4,6 +4,24 @@
  * npm install colorsys --save
  * 
  * to install the necessary modules
+ *
+ *
+ * Useful parameters (GET or POST):
+ * - @param {string} rgb:        A space-separated RGB string
+ *                   e.g.        ?rgb=255 0 255
+ *
+ * - @param {int}    r, g, b:    Set RGB components individually with
+ *                               an integer n where 0 <= n <= 255
+ *                   e.g.        ?r=255&b=255
+ * - @param {int}    brightness: Set the brightness of the lights with
+ *                               an integer n where 0 <= n <= 100
+ *                               This can be used alone to change the
+ *                               current color or together with the
+ *                               above parameters to affect those.
+ *                   e.g.        ?r=255&brightness=50 // 50% red
+ *                               ?brightness=10 // 10% brightness of
+ *                                              // whatever the current
+ *                                              // color is
  */
 
 const http = require('http');
@@ -361,3 +379,4 @@ function format(text) {
     }
     return text;
 }
+
