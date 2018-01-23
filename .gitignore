@@ -1,0 +1,7 @@
+*.dat
+*.txt
+*.pkl
+*.json
+*.html
+
+remote/status/
