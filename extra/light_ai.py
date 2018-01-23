@@ -42,7 +42,7 @@ class LightAI:
         second_of_day = (now - midnight).seconds
 
         if USE_DAY_OF_YEAR:
-            rgb = self.clf.prefix(
+            rgb = self.clf.predict(
                 [[day_of_year, day_of_week, second_of_day]]
             )[0]
         else:
